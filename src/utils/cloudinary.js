@@ -1,5 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
-import { response } from 'express';
+import { v2 as cloudinary } from 'cloudinary'
 import fs from "fs"
 
 
@@ -27,8 +26,12 @@ const uploadOnCloudinary = async(localFilePath)=>
            }
         )
 
-        console.log("file is uploaded successfull on cloudinary",uploadResult.url);
-        return response;
+        console.log("file is uploaded successfull on cloudinary",uploadresult.url);
+        if(uploadresult)
+        {
+        fs.unlinkSync(localFilePath);
+        }
+        return uploadresult;
     } 
   catch(error)
   {
