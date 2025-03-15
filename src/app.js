@@ -11,7 +11,7 @@ app.use(cors(
 ))
 
 //middlewares for handling the receiving data in different formats 
-app.use(express.json({linit:"16kb"}))
+app.use(express.json({limit:"16kb"}))
 app.use(express.urlencoded({extended:true,limit:"16kb"}))
 app.use(express.static("public"))
 

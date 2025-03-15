@@ -85,4 +85,84 @@ const registerUser = asyncHandler(async(req,res)=>
   }
 )
 
-export {registerUser}
+const loginUser =asyncHandler(async(req,res)=>
+{
+  // req body -> data 
+  console.log(req.body)
+  const {username,email,password} = req.body;
+  if(!(username || email))
+    {
+      throw new ApiError(400,"username or email is required");
+    }
+
+  //* username or email is exist in db or not 
+  const user = await User.findOne({$or:[{username},{email}]});
+  if(!user)
+  {
+    throw new ApiError(400,"User Not found");
+  }
+
+  //* check password 
+  const ispasswordValid = await user.isPasswordCorrect(password);
+  if(!ispasswordValid)
+    {
+      throw new ApiError(401,"Invalid user credentials");
+    }
+
+  // access and refresh token 
+
+  const accessToken = await user.generateAccessToken();
+  const refreshToken = await user.generateRefreshToken();
+  
+  user.refreshToken=refreshToken;
+  await user.save({validateBeforeSave: false}); // because without this our schema checks its validation on every field 
+  
+  // send cookies
+  //user.refreshtoken=refreshToken; 
+  //console.log(user);
+
+  
+  // bydefault cookies can be modified.but with this object it can only modifies by backend now for security sake 
+  const options =
+  {  
+  httpOnly:true,
+  secure:true
+  }
+
+   // return res 
+  return res.status(200)
+  .cookie("accessToken",accessToken, options)
+  .cookie("refreshToken",refreshToken, options)
+  .json(
+    new ApiResponse(200,{user:user,accessToken,refreshToken},"User logged In Successfully")
+  )
+
+ 
+})
+
+const logoutUser = asyncHandler(async(req,res)=>
+{
+  const user = req.user;
+  console.log(user);
+  await User.findByIdAndUpdate(
+    user._id,
+    {
+      $unset:
+      {refreshToken:""}
+    },
+    {new:true})
+
+    const options = {
+      httpOnly:true,
+      secure:true
+    }
+
+    return res.status(200)
+    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken", options)
+    .json(
+       new ApiResponse(200,{},"User logged out ")
+    )
+  
+})
+export {registerUser,loginUser,logoutUser}
