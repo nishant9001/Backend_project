@@ -1,7 +1,7 @@
 import {asyncHandler} from ".././utils/asyncHandler.js";
 import {ApiResponse} from ".././utils/ApiResponse.js";
 import {ApiError} from "../utils/ApiError.js";
-import {uploadOnCloudinary} from "../utils/cloudinary.js";
+import {uploadOnCloudinary,deleteOnCloudinary} from "../utils/cloudinary.js";
 import {User} from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 
@@ -288,7 +288,8 @@ const updateUserAvatar = asyncHandler(async(req,res)=>
     throw new ApiError(401,"avatarfilepath not available")
   }
   const responseAvatar = await uploadOnCloudinary(avatarLocalPath);
- // console.log(responseAvatar);
+
+  const Id=responseAvatar.public_id;
   if(!responseAvatar.url)
   {
     throw new ApiError(401,"error while uploading the file on cloudinary")
@@ -302,6 +303,7 @@ const updateUserAvatar = asyncHandler(async(req,res)=>
     {new:true}
   ).select("-password")
 
+  deleteOnCloudinary(Id);
   return res.status(200)
   .json(
     new ApiResponse(200,user,"avatar updated successfully")
@@ -317,7 +319,7 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>
       throw new ApiError(401,"CoverImagefilepath not available")
     }
     const responseCoverImage = await uploadOnCloudinary(CoverImageLocalPath);
-  
+    const Id=responseCoverImage.public_id;
     if(!responseCoverImage.url)
     {
       throw new ApiError(401,"error while uploading the file on cloudinary")
@@ -330,7 +332,8 @@ const updateUserCoverImage = asyncHandler(async(req,res)=>
       },
       {new:true}
     ).select("-password")
-  
+   
+    deleteOnCloudinary(Id);
     return res.status(200)
     .json(
       new ApiResponse(200,user,"CoverImage updated successfully")
