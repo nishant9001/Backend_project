@@ -1,6 +1,17 @@
 import {Router} from "express"
-import {registerUser,loginUser,logoutUser,refreshAccessToken,changeCurrentPassword,
-    getCurrentUser,updateUserDetails,updateUserAvatar,updateUserCoverImage} from "../controllers/user.controller.js";
+import 
+{
+    registerUser,
+    loginUser,logoutUser,
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateUserDetails,
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory
+} from "../controllers/user.controller.js";
 import {upload} from "../middlewares/multer.middleware.js";
 import {validateUser} from "../validators/user.validator.js"
 import {handleValidation} from "../middlewares/handlevalidation.middleware.js"
@@ -51,21 +62,33 @@ router.route("/getUser").get(
     getCurrentUser
 )
 
-router.route("/updateUser").post(
+router.route("/updateUser").patch(
     verifyJWT,
     updateUserDetails
 )
 
-router.route("/updateAvatar").post(
-    upload.single("avatar"),
+router.route("/updateAvatar").patch(
     verifyJWT,
+    upload.single("avatar"),
     updateUserAvatar
 )
 
-router.route("/updateCoverImage").post(
-    upload.single("CoverImage"),
+router.route("/updateCoverImage").patch(
     verifyJWT,
+    upload.single("CoverImage"),
     updateUserCoverImage
+)
+
+router.route("/getUserProfile/c/:username").get
+(
+    verifyJWT,
+    getUserChannelProfile
+)   // give id of user whom channel u r in (in params)
+
+router.route("/getWtchHistory").get
+(
+    verifyJWT,
+    getWatchHistory
 )
 
 export default router;

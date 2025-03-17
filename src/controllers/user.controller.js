@@ -361,8 +361,8 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>
         $lookup:
         {
           from:"subscriptions",
-          localfield:"_id",
-          foreignfield:"channel",
+          localField:"_id",
+          foreignField:"channel",
           as:"subscribers"
         }
       },
@@ -370,8 +370,8 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>
         $lookup:
         {
           from:"subscriptions",
-          localfield:"_id",
-          foreignfield:"subscriber",
+          localField:"_id",
+          foreignField:"subscriber",
           as:"subscribedTo"
         }
       },
@@ -425,6 +425,72 @@ const getUserChannelProfile = asyncHandler(async(req,res)=>
   )
 })
 
+const getWatchHistory = asyncHandler(async(req,res)=>
+{
+  //const user =req.user;
+
+  const user= await User.aggregate(
+    [
+      {
+        // whenever we are using find or findbyid we pass the string directly as a mongodb id 
+        // because mongoose did that conversion for us (ObjectId('_id')) but in aggregation it will 
+        // pass as like as we written so keep it in my mind. here we have to do it on our own
+        $match:
+        {
+          _id:new mongoose.Types.ObjectId(req.user._id)       
+        }
+      },
+      {
+        $lookup:
+        {
+          from:"videos",
+          localField:"watchHistory",
+          foreignField:"_id",
+          as:"watchHistory",
+          pipeline:[
+            {
+              $lookup:
+              {
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                  {
+                    $project:
+                    {
+                      fullName:1,
+                      username:1,
+                      avatar:1
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              $addFields:
+              {
+                owner:
+                {
+                  $first:"$owner"   // because now data of owner will be a object not the (user data object in array)
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  )
+
+  return res.status(200)
+  .json(
+    new ApiResponse(
+      200,
+      user[0].watchHistory,
+      "watch history fetched successfully")
+  )
+})
+
 export {
   registerUser,
   loginUser,
@@ -435,5 +501,6 @@ export {
   updateUserDetails,
   updateUserAvatar,
   updateUserCoverImage,
-  getUserChannelProfile
+  getUserChannelProfile,
+  getWatchHistory
 }
