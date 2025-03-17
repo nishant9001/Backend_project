@@ -51,7 +51,7 @@ router.route("/logout").post(
 
 router.route("/refresh").post(refreshAccessToken);
 
-router.route("/changepassword").post
+router.route("/changepassword").patch
 (
     verifyJWT,
     changeCurrentPassword
@@ -85,7 +85,7 @@ router.route("/getUserProfile/c/:username").get
     getUserChannelProfile
 )   // give id of user whom channel u r in (in params)
 
-router.route("/getWtchHistory").get
+router.route("/getWatchHistory").get
 (
     verifyJWT,
     getWatchHistory
