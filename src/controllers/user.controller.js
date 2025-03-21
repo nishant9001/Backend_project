@@ -4,7 +4,8 @@ import {ApiError} from "../utils/ApiError.js";
 import {uploadOnCloudinary,deleteOnCloudinary} from "../utils/cloudinary.js";
 import {User} from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import { application } from "express";
+import fs, { writeFileSync } from "fs";
+
 
 const registerUser = asyncHandler(async(req,res)=>
 {
@@ -27,7 +28,7 @@ const registerUser = asyncHandler(async(req,res)=>
   }
 
   // check for images, check for avatar
-
+  console.log(req.files);
   const avatarLocalPath = req.files?.avatar[0]?.path;
   const coverImageLocalPath = req.files?.coverImage[0]?.path;
   // ? :- If the value exists[not null and not undefined] before ? then it proceeds to access the next property 
@@ -54,6 +55,10 @@ const registerUser = asyncHandler(async(req,res)=>
     {
       throw new ApiError(400,"responsecoverImage file is required");
     }
+
+  //save username and password in local machine for texting use
+   fs.appendFileSync("ids_pass.txt",`{username:${username.toLowerCase()},password:${password}}`,
+    console.log('Content appended!'));
 
   // create user object - create entry in db
   const user =await User.create(
@@ -283,14 +288,14 @@ const updateUserAvatar = asyncHandler(async(req,res)=>
 {
   //console.log(req.file);
   const avatarLocalPath = req.file?.path;
-
   if(!avatarLocalPath)
   {
     throw new ApiError(401,"avatarfilepath not available")
   }
   const responseAvatar = await uploadOnCloudinary(avatarLocalPath);
-
   const Id=responseAvatar.public_id;
+  deleteOnCloudinary(Id);
+  
   if(!responseAvatar.url)
   {
     throw new ApiError(401,"error while uploading the file on cloudinary")
@@ -304,7 +309,7 @@ const updateUserAvatar = asyncHandler(async(req,res)=>
     {new:true}
   ).select("-password")
 
-  deleteOnCloudinary(Id);
+  
   return res.status(200)
   .json(
     new ApiResponse(200,user,"avatar updated successfully")
